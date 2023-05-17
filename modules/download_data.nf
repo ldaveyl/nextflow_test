@@ -3,17 +3,31 @@ process download_data {
     publishDir path: "${params.outputdir}/download_data", mode: 'copy'
        
     input:
-        val(gene_annotation)
+        val(file)
 
     output:
-        path("*.gtf"), emit: gtf
-        
+        path("*"), emit: file
+    
     script:
+        ext = file(file).extension
         """
-        wget -q ${gene_annotation}
+        wget -q ${file}
 
-        if [[ ${gene_annotation} =~ \\.gz\$ ]]; then
-            gzip -d *.gz
+        if [[ ${ext} == 'gz' ]]; then
+           gunzip *.gz
         fi
         """ 
+
+    stub:
+        ext = file(file).extension
+        name = file(file).name
+        basename = file(file).baseName
+        """
+        touch ${name}
+
+        if [[ ${ext} == 'gz' ]]; then
+           touch ${basename}
+           rm ${name}
+        fi
+        """
 }
