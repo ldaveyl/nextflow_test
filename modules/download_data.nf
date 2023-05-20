@@ -1,20 +1,22 @@
 process download_data {
 
+    tag "${filetype}"
+
     publishDir path: "${params.outputdir}/download_data", mode: 'copy'
-       
+        
     input:
-        val(file)
+        tuple val(filetype), val(file)
 
     output:
-        path("*"), emit: file
-    
+        tuple val(filetype), path("*"), emit: filetype_file
+
     script:
         ext = file(file).extension
         """
         wget -q ${file}
 
         if [[ ${ext} == 'gz' ]]; then
-           gunzip *.gz
+            gunzip *.gz
         fi
         """ 
 
@@ -26,8 +28,8 @@ process download_data {
         touch ${name}
 
         if [[ ${ext} == 'gz' ]]; then
-           touch ${basename}
-           rm ${name}
+            touch ${basename}
+            rm ${name}
         fi
         """
 }

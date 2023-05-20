@@ -5,16 +5,27 @@
 nextflow.enable.dsl=2
 
 include { download_data } from "./modules/download_data.nf"
+include { subset_genome } from "./modules/subset_genome.nf"
 
 workflow {
 
-    // Get input parameters
+    // Create input parameter channel. Provide id for each parameter.
     Channel
-        .fromList([params.genome, params.assembly])
-        .set { f }
+        .fromList([
+            ["assembly", params.assembly],
+            ["genome", params.genome]
+        ])
 
-    // Download data
-    download_data(f)
+    // Download data and unzip if necessary
+    | download_data 
+    
+    // Sort output from download_data alphabetically using id: first element is assembly, the second is genome
+    // This step is necessary for subset_genome to be able to parse output
+    | toSortedList({ a, b -> a[0] <=> b[0] })
 
-    // download_data.out.view()
+    // Remove ids from input
+    | map { it -> [it[0][1], it[1][1]]}
+    
+    // Select entries in the genome FASTA file, belonging to the Primary Assembly or Mitochondrial chromosome
+    | subset_genome
 }
