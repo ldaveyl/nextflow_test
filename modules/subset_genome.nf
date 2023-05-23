@@ -8,7 +8,7 @@ process subset_genome {
         tuple path(assembly), path(genome)
 
     output:
-        path("${genome_basename}_subset.fa")
+        path("${genome_basename}_subset.fa"), emit: genome_subset
 
     script:
         genome_basename = file(genome).baseName
