@@ -1,19 +1,19 @@
-process subset_genome {
+process SUBSET_GENOME {
 
-    container "quay.io/biocontainers/samtools:1.3.1--h0cf4675_11"
+    container "quay.io/biocontainers/samtools:1.17--hd87286a_1"
 
-    publishDir path: "${params.outputdir}/subset_genome", mode: 'copy'
+    publishDir path: "${params.outputdir}/SUBSET_GENOME", mode: 'copy'
 
     input:
         tuple path(assembly), path(genome)
 
     output:
-        path("${genome_basename}_subset.fa"), emit: genome_subset
+        tuple path("${assembly}"), path("${genome_basename}_subset.fa"), emit: assembly_genome
 
     script:
         genome_basename = file(genome).baseName
         """
-        sort -k1,1V ${assembly} | awk -F "\t" '\$8 == "Primary Assembly" || \$8 == "non-nuclear" {print \$7}' > subset_ids.txt
+        sort -k1,1 ${assembly} | awk -F "\t" '\$8 == "Primary Assembly" || \$8 == "non-nuclear" {print \$7}' > subset_ids.txt
         samtools faidx ${genome} -r subset_ids.txt -o ${genome_basename}_subset.fa
         """
 }

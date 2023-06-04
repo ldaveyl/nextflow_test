@@ -1,31 +1,37 @@
 #!/usr/bin/env nextflow
 
-// cd /home/eldavey/Documents/nextflowtest/workdir/ && nextflow /home/eldavey/Documents/nextflowtest/pipeline/main.nf -stub-run
+// cd /home/eldavey/Documents/nextflowtest/workdir/ && nextflow /home/eldavey/Documents/nextflowtest/pipeline/main.nf -resume
 
 nextflow.enable.dsl=2
 
-include { download_data } from "./modules/download_data.nf"
-include { subset_genome } from "./modules/subset_genome.nf"
+include { CREATE_GENOME_INDEX } from './workflows/create_genome_index.nf'
 
 workflow {
 
-    // Create input parameter channel. Provide id for each parameter.
-    Channel
-        .fromList([
-            ["assembly", params.assembly],
-            ["genome", params.genome]
-        ])
+    // Check input path parameters to see if they exist
+    checkPathParamList = [
+        params.genome, 
+        params.assembly,
+        params.outputdir,
+        params.sra_samples
+    ]
+    for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
-    // Download data and unzip if necessary
-    | download_data 
-    
-    // Sort output from download_data alphabetically using id: first element is assembly, the second is genome
-    // This step is necessary for subset_genome to be able to parse output
-    | toSortedList({ a, b -> a[0] <=> b[0] })
+    // Create genome index
+    if (!params.genome_index) {
+        CREATE_GENOME_INDEX()
+            .set { ch_genome_index }
+    } else {
+        ch_genome_index = Channel.fromPath(params.genome_index)
+    }
 
-    // Remove ids from input
-    | map { it -> [it[0][1], it[1][1]]}
-    
-    // Select entries in the genome FASTA file, belonging to the Primary Assembly or Mitochondrial chromosome
-    | subset_genome
+    // Create channel for SRA data download
+    // Channel
+    //     .fromPath(params.sra_samples)
+    //     .splitText()
+
+    // | view
+    // | download_sra
+
+
 }

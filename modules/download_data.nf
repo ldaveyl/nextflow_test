@@ -1,8 +1,10 @@
-process download_data {
+process DOWNLOAD_DATA {
+
+    container "quay.io/biocontainers/wget:1.20.1"
 
     tag "${filetype}"
 
-    publishDir path: "${params.outputdir}/download_data", mode: 'copy'
+    publishDir path: "${params.outputdir}/DOWNLOAD_DATA", mode: 'copy'
         
     input:
         tuple val(filetype), val(file)
@@ -19,17 +21,4 @@ process download_data {
             gunzip *.gz
         fi
         """ 
-
-    stub:
-        ext = file(file).extension
-        name = file(file).name
-        basename = file(file).baseName
-        """
-        touch ${name}
-
-        if [[ ${ext} == 'gz' ]]; then
-            touch ${basename}
-            rm ${name}
-        fi
-        """
 }
